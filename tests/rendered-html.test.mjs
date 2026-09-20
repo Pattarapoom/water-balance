@@ -18,11 +18,23 @@ test("server-renders the water balance overview", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
   assert.match(html, /Water Balance \| ศูนย์ข้อมูลสมดุลน้ำลุ่มน้ำ/);
-  assert.match(html, /เห็นสถานการณ์น้ำทั้งหมด/);
+  assert.match(html, /แผนที่เดียว เห็นทุกลุ่มน้ำ/);
+  assert.match(html, /แผนที่และตารางลุ่มน้ำ/);
+  assert.match(html, /Admin Console/);
   assert.match(html, /ปิง/);
   assert.match(html, /ชี/);
   assert.match(html, /มูล/);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|Your site is taking shape/i);
+});
+
+test("renders the demo admin basin registry", async () => {
+  const response = await request("/admin");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /จัดการลุ่มน้ำและแหล่งข้อมูล/);
+  assert.match(html, /Basin Registry/);
+  assert.match(html, /เพิ่มลุ่มน้ำใหม่/);
+  assert.match(html, /Demo Administrator/);
 });
 
 test("renders basin detail with basin-specific metadata", async () => {
