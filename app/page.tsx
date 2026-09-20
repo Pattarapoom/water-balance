@@ -57,15 +57,6 @@ export default async function Home() {
       </section>
 
       <BasinExplorer basins={basins} />
-
-      <section className="source-footer public-source">
-        <div>
-          <p className="eyebrow">มาตรฐานข้อมูลกลาง</p>
-          <h2>เชื่อม 3 ระบบ โดยยังตรวจสอบย้อนกลับได้</h2>
-          <p>แต่ละ Adapter แปลงชื่อฟิลด์ หน่วย และวันที่เป็น schema กลาง ก่อนส่งให้หน้าเว็บและ Unified API โดยไม่แก้ค่าจากแบบจำลองต้นทาง</p>
-        </div>
-        <a href="/api/v1/basins">เปิด Unified API ↗</a>
-      </section>
     </main>
   );
 }
