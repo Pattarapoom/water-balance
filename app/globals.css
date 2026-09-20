@@ -95,7 +95,7 @@ h1 { margin:0; font-size:clamp(42px,5.2vw,76px); line-height:1.07; letter-spacin
 .basin-data-table td:first-child { min-width:150px; text-align:left; }.basin-data-table td:first-child strong,.basin-data-table td:first-child small { display:block; padding-left:22px; }.basin-data-table td:first-child small { color:var(--muted); font-size:9px; }.table-basin-dot { position:absolute; width:12px; height:24px; margin:3px 0 0; border-radius:5px; background:#14847e; }.table-basin-dot.chi{background:#7ba78f}.table-basin-dot.mun{background:#3f7279}.row-detail { color:var(--teal); font-size:10px; font-weight:700; }.public-source { margin-top:0; }
 
 /* Three-column analysis workspace: filters / map / table */
-.explorer { margin-left:3vw; margin-right:3vw; }
+.explorer { margin-left:3vw; margin-right:3vw; padding-top:28px; }
 .explorer-workspace { display:grid; grid-template-columns:250px minmax(420px,1.08fr) minmax(470px,.92fr); gap:14px; align-items:stretch; }
 .filter-panel { display:flex; flex-direction:column; min-width:0; border:1px solid var(--line); border-radius:16px; background:white; overflow:hidden; }
 .panel-title { display:flex; align-items:center; gap:11px; min-width:0; }.panel-title>span { width:30px; height:30px; display:grid; place-items:center; flex:none; border-radius:8px; color:white; background:var(--teal); font:700 10px Georgia,serif; }.panel-title small,.panel-title h3 { display:block; margin:0; }.panel-title small { color:var(--muted); font-size:8px; font-weight:800; letter-spacing:.11em; }.panel-title h3 { margin-top:2px; overflow:hidden; font-size:15px; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }

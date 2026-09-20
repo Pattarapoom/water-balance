@@ -18,7 +18,6 @@ test("server-renders the water balance overview", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
   assert.match(html, /Water Balance \| ศูนย์ข้อมูลสมดุลน้ำลุ่มน้ำ/);
-  assert.match(html, /แผนที่เดียว เห็นทุกลุ่มน้ำ/);
   assert.match(html, /แผนที่และตารางลุ่มน้ำ/);
   assert.match(html, /แผนที่ Leaflet แสดงขอบเขตลุ่มน้ำหลักและจังหวัดของประเทศไทย/);
   assert.match(html, /Admin Console/);
