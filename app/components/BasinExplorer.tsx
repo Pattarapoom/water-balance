@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { BasinSummary } from "../../lib/water-data";
+import BasinLeafletMap from "./BasinLeafletMap";
 
 const number = new Intl.NumberFormat("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -38,15 +39,7 @@ export default function BasinExplorer({ basins }: { basins: BasinSummary[] }) {
       <div className="map-table-layout">
         <article className="map-card" aria-label="แผนที่ลุ่มน้ำแบบเลือกได้">
           <div className="map-toolbar"><div><span>แผนที่ประเทศไทย</span><strong>{selectedBasin ? `ลุ่มน้ำ${selectedBasin.name}` : "ภาพรวม 3 ลุ่มน้ำ"}</strong></div><small>{boundary === "main" ? "ขอบเขตลุ่มน้ำหลัก" : boundary === "sub" ? "ขอบเขตลุ่มน้ำสาขา" : "ขอบเขตการปกครอง"}</small></div>
-          <div className="map-stage">
-            <div className="map-grid" aria-hidden="true" />
-            <div className="thailand-silhouette" aria-hidden="true"><i /><i /><i /></div>
-            <button className={`basin-shape map-ping ${selected === "ping" ? "selected" : ""} ${selected !== "all" && selected !== "ping" ? "muted" : ""}`} type="button" onClick={() => setSelected(selected === "ping" ? "all" : "ping")}><b>ปิง</b><small>06</small></button>
-            <button className={`basin-shape map-chi ${selected === "chi" ? "selected" : ""} ${selected !== "all" && selected !== "chi" ? "muted" : ""}`} type="button" onClick={() => setSelected(selected === "chi" ? "all" : "chi")}><b>ชี</b><small>04</small></button>
-            <button className={`basin-shape map-mun ${selected === "mun" ? "selected" : ""} ${selected !== "all" && selected !== "mun" ? "muted" : ""}`} type="button" onClick={() => setSelected(selected === "mun" ? "all" : "mun")}><b>มูล</b><small>05</small></button>
-            <div className="map-compass" aria-hidden="true">N<span>↑</span></div>
-            <div className="map-scale" aria-hidden="true"><i /> 200 กม.</div>
-          </div>
+          <BasinLeafletMap selected={selected} boundary={boundary} onSelect={(id) => setSelected(selected === id ? "all" : id)} />
           <div className="map-legend"><span><i className="legend-ping" /> ปิง</span><span><i className="legend-chi" /> ชี</span><span><i className="legend-mun" /> มูล</span><small>กดพื้นที่บนแผนที่เพื่อกรองตาราง</small></div>
         </article>
 
