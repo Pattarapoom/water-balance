@@ -3,12 +3,40 @@
 import { useEffect, useRef, useState } from "react";
 import type { GeoJsonObject, Feature, Geometry } from "geojson";
 import type { GeoJSON as LeafletGeoJSON, Map as LeafletMap, Path, PathOptions, Polygon } from "leaflet";
+import type { BasinSummary } from "../../lib/water-data";
 
 type BasinProperties = { MB_CODE?: string; MBASIN_T?: string; MBASIN_E?: string };
 type ProvinceProperties = { PROV_CODE?: string; PROV_NAME?: string; FIRST_FIRS?: string };
 
 const BASIN_IDS: Record<string, string> = { "04": "chi", "05": "mun", "06": "ping" };
 const COLORS: Record<string, string> = { "04": "#79a88e", "05": "#376f78", "06": "#11817b" };
+const number = new Intl.NumberFormat("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character] ?? character);
+}
+
+function tooltipContent(properties: BasinProperties, basin?: BasinSummary) {
+  const code = escapeHtml(properties.MB_CODE ?? "—");
+  const name = escapeHtml(properties.MBASIN_T ?? "ลุ่มน้ำ");
+  const nameEn = escapeHtml(properties.MBASIN_E ?? "");
+  if (!basin) {
+    return `<div class="water-tooltip-card"><header><span>รหัสลุ่มน้ำ ${code}</span><strong>ลุ่มน้ำ${name}</strong><small>${nameEn}</small></header><div class="tooltip-empty"><b>ยังไม่เชื่อมข้อมูลสมดุลน้ำ</b><span>เพิ่มแหล่งข้อมูลได้จาก Admin Console</span></div></div>`;
+  }
+  const statusClass = basin.balance < 0 ? "negative" : "positive";
+  const sourceLabel = basin.sourceStatus === "live" ? "ข้อมูลจากต้นทาง" : "ข้อมูลสำรองล่าสุด";
+  return `<div class="water-tooltip-card">
+    <header><span>รหัสลุ่มน้ำ ${code}</span><strong>ลุ่มน้ำ${name}</strong><small>${nameEn}</small></header>
+    <dl>
+      <div><dt>วันที่ข้อมูล</dt><dd>${escapeHtml(basin.date)}</dd></div>
+      <div><dt>ปริมาณฝน</dt><dd>${basin.rainfall == null ? "—" : number.format(basin.rainfall)} <small>มม.</small></dd></div>
+      <div><dt>น้ำต้นทุน</dt><dd>${number.format(basin.supply)} <small>ล้าน ลบ.ม.</small></dd></div>
+      <div><dt>ความต้องการใช้น้ำ</dt><dd>${number.format(basin.demand)} <small>ล้าน ลบ.ม.</small></dd></div>
+      <div class="tooltip-balance"><dt>สมดุลน้ำ</dt><dd class="${statusClass}">${number.format(basin.balance)} <small>ล้าน ลบ.ม.</small></dd></div>
+    </dl>
+    <footer><span><i class="${basin.sourceStatus}"></i>${sourceLabel}</span><b>${escapeHtml(basin.status)}</b></footer>
+  </div>`;
+}
 
 function basinStyle(feature: Feature<Geometry, BasinProperties> | undefined, selected: string): PathOptions {
   const code = feature?.properties?.MB_CODE ?? "";
@@ -23,7 +51,7 @@ function basinStyle(feature: Feature<Geometry, BasinProperties> | undefined, sel
   };
 }
 
-export default function BasinLeafletMap({ selected, boundary, onSelect }: { selected: string; boundary: string; onSelect: (id: string) => void }) {
+export default function BasinLeafletMap({ basins, selected, boundary, onSelect }: { basins: BasinSummary[]; selected: string; boundary: string; onSelect: (id: string) => void }) {
   const elementRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const basinLayerRef = useRef<LeafletGeoJSON | null>(null);
@@ -76,12 +104,12 @@ export default function BasinLeafletMap({ selected, boundary, onSelect }: { sele
             const properties = feature.properties ?? {};
             const code = properties.MB_CODE ?? "—";
             const id = BASIN_IDS[code];
-            const status = id ? "คลิกเพื่อดูข้อมูลสมดุลน้ำ" : "ยังไม่เชื่อมข้อมูลสมดุลน้ำ";
-            layer.bindTooltip(`<strong>${code} • ${properties.MBASIN_T ?? "ลุ่มน้ำ"}</strong><br><span>${properties.MBASIN_E ?? ""}</span><br><small>${status}</small>`, { sticky: true, className: "basin-tooltip" });
+            const basin = basins.find((item) => item.id === id);
+            layer.bindTooltip(tooltipContent(properties, basin), { sticky: true, direction: "top", opacity: 1, className: "basin-tooltip water-data-tooltip" });
             layer.on({
               mouseover: () => (layer as Path).setStyle({ weight: id ? 3.5 : 1.5, fillOpacity: id ? 0.88 : 0.42 }),
               mouseout: () => basinLayerRef.current?.resetStyle(layer),
-              click: () => { if (id) selectRef.current(id); },
+              click: (event) => { layer.openTooltip(event.latlng); if (id) selectRef.current(id); },
             });
           },
         }).addTo(map);

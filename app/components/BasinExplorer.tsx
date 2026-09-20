@@ -49,7 +49,7 @@ export default function BasinExplorer({ basins }: { basins: BasinSummary[] }) {
 
         <article className="map-card" aria-label="แผนที่ลุ่มน้ำแบบเลือกได้">
           <div className="map-toolbar"><div className="panel-title"><span>02</span><div><small>INTERACTIVE MAP</small><h3>{selectedBasin ? `แผนที่ลุ่มน้ำ${selectedBasin.name}` : "แผนที่ลุ่มน้ำประเทศไทย"}</h3></div></div><small>{boundary === "main" ? "ขอบเขตลุ่มน้ำหลัก" : boundary === "sub" ? "ขอบเขตลุ่มน้ำสาขา" : "ขอบเขตการปกครอง"}</small></div>
-          <BasinLeafletMap selected={selected} boundary={boundary} onSelect={(id) => setSelected(selected === id ? "all" : id)} />
+          <BasinLeafletMap basins={basins} selected={selected} boundary={boundary} onSelect={(id) => setSelected(selected === id ? "all" : id)} />
           <div className="map-legend"><span><i className="legend-ping" /> ปิง</span><span><i className="legend-chi" /> ชี</span><span><i className="legend-mun" /> มูล</span><small>กดพื้นที่บนแผนที่เพื่อกรองตาราง</small></div>
         </article>
 
