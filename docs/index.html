@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#f3f7f4">
+    <meta name="description" content="เดโมระบบแบบจำลองวิเคราะห์สมดุลน้ำระดับลุ่มน้ำ">
+    <title>ระบบแบบจำลองวิเคราะห์สมดุลน้ำระดับลุ่มน้ำ</title>
+    <link rel="icon" href="../public/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <link rel="stylesheet" href="./demo.css">
+    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script defer src="./demo.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="หน้าหลัก Water Balance">
+        <img src="../HIILogo_EN-360x360.png" alt="โลโก้ สสน.">
+        <span>ระบบแบบจำลองวิเคราะห์สมดุลน้ำระดับลุ่มน้ำ<small>WATER BALANCE • MULTI-BASIN DEMO</small></span>
+      </a>
+      <div class="top-actions"><span class="demo-badge"><i></i> DEMO • ข้อมูลตัวอย่าง</span><a class="source-link" href="https://github.com/Pattarapoom/water-balance" target="_blank" rel="noreferrer">Source on GitHub ↗</a></div>
+    </header>
+    <main class="workspace">
+      <aside class="panel filters">
+        <div class="panel-title"><span class="number">01</span><div><small>DATA FILTER</small><h1>ตัวเลือกข้อมูล</h1></div></div>
+        <div class="filter-body">
+          <label>ขอบเขตลุ่มน้ำ<select id="basin-select"><option value="all">ทุกลุ่มน้ำที่มีตัวอย่าง</option><option value="06">ลุ่มน้ำปิง</option><option value="04">ลุ่มน้ำชี</option><option value="05">ลุ่มน้ำมูล</option></select></label>
+          <label>ช่วงคาดการณ์<select id="horizon-select"><option value="7days">ล่วงหน้า 7 วัน</option><option value="6months">6 เดือน</option></select></label>
+          <label>ผลที่แสดง<select id="metric-select"><option value="balance">ปริมาณสมดุลน้ำ</option><option value="reservoir">ปริมาณสะสม</option><option value="rainfall">ปริมาณฝน</option><option value="supply">น้ำต้นทุน</option><option value="demand">ความต้องการใช้น้ำ</option></select></label>
+          <label>ค้นหาจังหวัด<input id="province-search" type="search" placeholder="พิมพ์ชื่อจังหวัด…" list="province-options"><datalist id="province-options"></datalist></label>
+          <label class="check-row"><input id="province-toggle" type="checkbox"><span>แสดงขอบเขตจังหวัด</span></label>
+          <button id="reset-button" class="reset-button" type="button">ล้างตัวกรอง</button>
+          <div class="export-box"><b>ส่งออกข้อมูลตัวอย่าง</b><button id="csv-button" type="button">ดาวน์โหลด CSV</button><small>ข้อมูลบนหน้านี้จัดทำเพื่อสาธิตเท่านั้น</small></div>
+        </div>
+        <section class="selected-summary"><small>ลุ่มน้ำที่เลือก</small><h2 id="selected-name">ทุกลุ่มน้ำ</h2><p id="summary-period">คาดการณ์ 7 วัน • ตัวอย่างจำลอง</p><dl><div><dt>จำนวนรายการ</dt><dd id="summary-count">—</dd></div><div><dt>สมดุลน้ำเฉลี่ย</dt><dd id="summary-balance">—</dd></div><div><dt>สถานะข้อมูล</dt><dd class="sample-state">ข้อมูลตัวอย่าง</dd></div></dl><small class="disclaimer">ตัวเลขทั้งหมดเป็นข้อมูลสมมติ ไม่ใช้ประกอบการตัดสินใจด้านการบริหารจัดการน้ำ</small></section>
+      </aside>
+
+      <section class="panel map-panel" aria-label="แผนที่ลุ่มน้ำตัวอย่าง">
+        <div class="panel-title map-heading"><span class="number">02</span><div><small>INTERACTIVE MAP</small><h2>แผนที่ลุ่มน้ำประเทศไทย</h2></div><span class="metric-chip" id="metric-chip">ปริมาณสมดุลน้ำ</span></div>
+        <div id="map" role="application" aria-label="แผนที่ลุ่มน้ำ"></div>
+        <div class="map-legend"><span>ขาดดุล</span><i></i><span>สมดุล/เกินดุล</span><small>สีแสดงค่าตัวอย่าง</small></div>
+      </section>
+
+      <section class="panel table-panel" aria-label="ตารางผลการวิเคราะห์ตัวอย่าง">
+        <div class="panel-title table-heading"><span class="number">03</span><div><small>WATER BALANCE • SAMPLE</small><h2>ตารางผลการวิเคราะห์</h2></div><span class="record-count" id="record-count">— รายการ</span></div>
+        <div class="table-scroll"><table><thead><tr><th>ลุ่มน้ำย่อย</th><th>จังหวัด</th><th>ช่วงเวลา</th><th>ปริมาณฝน<br>(มม.)</th><th>น้ำต้นทุน<br>(ล้าน ลบ.ม.)</th><th>ความต้องการ<br>(ล้าน ลบ.ม.)</th><th>สมดุลน้ำ<br>(ล้าน ลบ.ม.)</th><th>สถานะ</th></tr></thead><tbody id="result-rows"></tbody></table></div>
+        <div class="table-foot"><span><i></i> ข้อมูลจำลองเพื่อแสดงตัวอย่างการทำงาน</span><span id="source-date">ข้อมูลตัวอย่าง • 21 ก.ย. 2569</span></div>
+      </section>
+    </main>
+    <footer>สถาบันสารสนเทศทรัพยากรน้ำ (องค์การมหาชน) • หน้า GitHub Pages สำหรับสาธิต • <a href="https://thai-water-balance.pattarapoom.chatgpt.site" target="_blank" rel="noreferrer">เว็บตัวเต็มที่ deploy ไว้ ↗</a></footer>
+  </body>
+</html>
