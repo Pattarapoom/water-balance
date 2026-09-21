@@ -36,7 +36,7 @@ export default async function BasinPage({ params }: { params: Promise<{ basin: s
   return (
     <main className="detail-page">
       <header className="topbar">
-        <a className="brand" href="/" aria-label="กลับหน้าภาพรวม"><span className="brand-mark" aria-hidden="true">≈</span><span><strong>Water Balance</strong><small>ศูนย์ข้อมูลสมดุลน้ำลุ่มน้ำ</small></span></a>
+        <a className="brand" href="/" aria-label="กลับหน้าภาพรวม"><span className="brand-mark" aria-hidden="true" /><span><strong>ระบบแบบจำลองวิเคราะห์สมดุลน้ำระดับลุ่มน้ำ</strong></span></a>
         <nav aria-label="เมนูหลัก"><a href="/">ภาพรวม</a><a className="active" href={`/forecast/${basin}`}>ลุ่มน้ำ{summary.name}</a></nav>
         <a className="back-link" href="/">← กลับหน้าภาพรวม</a>
       </header>

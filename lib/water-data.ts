@@ -18,8 +18,8 @@ export type BasinSummary = {
   sourceUrl: string;
 };
 
-export type TrendPoint = { date: string; rainfall: number | null; balance: number };
-export type SubArea = { id: string; name: string; rainfall: number | null; supply: number; demand: number; balance: number };
+export type TrendPoint = { date: string; rainfall: number | null; balance: number; reservoir?: number; supply?: number; demand?: number; droughtIndex?: number; runoffIndex?: number };
+export type SubArea = { id: string; name: string; date?: string; rainfall: number | null; supply: number; demand: number; balance: number; reservoir?: number; droughtIndex?: number; runoffIndex?: number };
 export type BasinDetail = { summary: BasinSummary; trend: TrendPoint[]; subareas: SubArea[] };
 
 const FALLBACK: Record<string, BasinDetail> = {
@@ -80,17 +80,18 @@ async function pingDetail(config: BasinConfig): Promise<BasinDetail> {
     droughtIndex: n(main.drought_index), runoffIndex: n(main.runoff_index), status: statusFor(balance, rainfall),
     sourceStatus: "live", sourceUrl: config.sourceUrl,
   };
-  const subareas = subRows.map((row) => ({ id: String(row.id ?? ""), name: String(row.name ?? row.id ?? ""), rainfall: row.rainfall == null ? null : n(row.rainfall), supply: n(row.watersupply), demand: n(row.water_demand), balance: n(row.water_balance) }));
+  const subareas = subRows.map((row) => ({ id: String(row.id ?? ""), name: String(row.name ?? row.id ?? ""), rainfall: row.rainfall == null ? null : n(row.rainfall), supply: n(row.watersupply), demand: n(row.water_demand), balance: n(row.water_balance), reservoir: n(row.reservoir), droughtIndex: n(row.drought_index), runoffIndex: n(row.runoff_index) }));
   return { summary, trend: [{ date, rainfall, balance }], subareas };
 }
 
-async function legacyDetail(config: BasinConfig): Promise<BasinDetail> {
-  const latest = await json<{ datesims?: { datesim: string }[] }>(`${config.apiBase}/forecast/lastsimulate/mv_mainbasin_forecast_weekly`);
+async function legacyDetail(config: BasinConfig, horizon: "7days" | "6months"): Promise<BasinDetail> {
+  const model = horizon === "6months" ? "6months" : "weekly";
+  const latest = await json<{ datesims?: { datesim: string }[] }>(`${config.apiBase}/forecast/lastsimulate/mv_mainbasin_forecast_${model}`);
   const simulationDate = latest.datesims?.[0]?.datesim;
   if (!simulationDate) throw new Error("No legacy forecast date");
-  const rows = await json<Record<string, unknown>[]>(`${config.apiBase}/mv-mainbasin-forecast-weekly/${simulationDate}`);
-  const daily = rows.filter((row) => !String(row.dateforecast ?? "").includes("-"));
-  const latestDay = daily.at(-1);
+  const rows = await json<Record<string, unknown>[]>(`${config.apiBase}/mv-mainbasin-forecast-${model}/${simulationDate}`);
+  const periodRows = horizon === "6months" ? rows : rows.filter((row) => !String(row.dateforecast ?? "").includes("-"));
+  const latestDay = periodRows.at(-1);
   if (!latestDay) throw new Error("No legacy daily data");
   const rainfall = latestDay.rainfall == null ? null : n(latestDay.rainfall);
   const balance = n(latestDay.waterbalance);
@@ -101,21 +102,35 @@ async function legacyDetail(config: BasinConfig): Promise<BasinDetail> {
     droughtIndex: n(latestDay.droughtindex), runoffIndex: n(latestDay.runoffindex),
     status: statusFor(balance, rainfall), sourceStatus: "live", sourceUrl: config.sourceUrl,
   };
-  const trend = daily.map((row) => ({ date: String(row.dateforecast ?? ""), rainfall: row.rainfall == null ? null : n(row.rainfall), balance: n(row.waterbalance) }));
-  return { summary, trend, subareas: [] };
+  const trend = periodRows.map((row) => ({ date: String(row.dateforecast ?? ""), rainfall: row.rainfall == null ? null : n(row.rainfall), reservoir: n(row.reservoir), supply: n(row.watersupply), demand: n(row.waterdemand), balance: n(row.waterbalance), droughtIndex: n(row.droughtindex), runoffIndex: n(row.runoffindex) }));
+  let subbasinRows: Record<string, unknown>[] = [];
+  try {
+    subbasinRows = await json<Record<string, unknown>[]>(`${config.apiBase}/mv-subbasin-forecast-${model}/0000/${simulationDate}`);
+  } catch {
+    // Main basin summaries remain live even if the optional subbasin table is unavailable.
+  }
+  const selectedSubbasinRows = horizon === "6months" ? subbasinRows : subbasinRows.filter((row) => String(row.dateforecast ?? "") === String(latestDay.dateforecast ?? ""));
+  const subareas = selectedSubbasinRows
+    .map((row) => ({ id: String(row.sb_code ?? ""), name: String(row.sb_name_t ?? row.sb_code ?? ""), date: String(row.dateforecast ?? ""), rainfall: row.rainfall == null ? null : n(row.rainfall), supply: n(row.watersupply), demand: n(row.waterdemand), balance: n(row.waterbalance), reservoir: n(row.reservoir), droughtIndex: n(row.droughtindex), runoffIndex: n(row.runoffindex) }));
+  return { summary, trend, subareas };
 }
 
-export async function getBasinDetail(id: string): Promise<BasinDetail | null> {
+export async function getBasinDetail(id: string, horizon: "7days" | "6months" = "7days"): Promise<BasinDetail | null> {
   const config = getBasinConfig(id);
   if (!config) return null;
+  if (horizon === "6months" && config.id === "ping") return null;
   try {
-    return config.adapter === "ping-v1" ? await pingDetail(config) : await legacyDetail(config);
+    return config.adapter === "ping-v1" ? await pingDetail(config) : await legacyDetail(config, horizon);
   } catch {
-    return FALLBACK[id];
+    return horizon === "7days" ? FALLBACK[id] : null;
   }
 }
 
-export async function getBasinSummaries() {
-  const results = await Promise.all(BASINS.map((basin) => getBasinDetail(basin.id)));
-  return results.filter((result): result is BasinDetail => Boolean(result)).map((result) => result.summary);
+export async function getBasinDetails(horizon: "7days" | "6months" = "7days") {
+  const results = await Promise.all(BASINS.map((basin) => getBasinDetail(basin.id, horizon)));
+  return results.filter((result): result is BasinDetail => Boolean(result));
+}
+
+export async function getBasinSummaries(horizon: "7days" | "6months" = "7days") {
+  return (await getBasinDetails(horizon)).map((detail) => detail.summary);
 }

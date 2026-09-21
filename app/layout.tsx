@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = incoming.get("x-forwarded-host") ?? incoming.get("host") ?? "localhost:3000";
   const protocol = incoming.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const title = "Water Balance | ศูนย์ข้อมูลสมดุลน้ำลุ่มน้ำ";
+  const title = "ระบบแบบจำลองวิเคราะห์สมดุลน้ำระดับลุ่มน้ำ";
   const description = "ระบบรวมผลวิเคราะห์สมดุลน้ำลุ่มน้ำปิง ชี และมูลในมาตรฐานเดียวกัน";
   const image = `${origin}/og.png`;
   return {

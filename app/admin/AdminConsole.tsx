@@ -63,7 +63,7 @@ export default function AdminConsole({ initialBasins }: { initialBasins: AdminBa
   return (
     <main className="admin-shell">
       <header className="topbar admin-topbar">
-        <a className="brand" href="/" aria-label="กลับหน้าสาธารณะ"><span className="brand-mark" aria-hidden="true">≈</span><span><strong>Water Balance</strong><small>Administration Console</small></span></a>
+        <a className="brand" href="/" aria-label="กลับหน้าสาธารณะ"><span className="brand-mark" aria-hidden="true" /><span><strong>ระบบแบบจำลองวิเคราะห์สมดุลน้ำระดับลุ่มน้ำ</strong><small>Administration Console</small></span></a>
         <nav aria-label="เมนูหลังบ้าน"><a className="active" href="#registry">Basin Registry</a><a href="#add-basin">เพิ่มลุ่มน้ำ</a><a href="#activity">ประวัติระบบ</a></nav>
         <a className="public-link" href="/">ดูหน้าสาธารณะ ↗</a>
       </header>
